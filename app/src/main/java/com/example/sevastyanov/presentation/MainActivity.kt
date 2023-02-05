@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var noInternetText: TextView
     private lateinit var buttonRepeat: Button
 
+    private lateinit var imageSearch: ImageView
+
     private var filmId = UNDEFINED_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         noInternetImage = findViewById(R.id.image_no_internet)
         noInternetText = findViewById(R.id.text_no_internet)
         buttonRepeat = findViewById(R.id.button_repeat)
+
+        imageSearch = findViewById(R.id.imageView2)
 
         setupRecyclerView()
         viewModel.getTopList()
@@ -85,6 +89,10 @@ class MainActivity : AppCompatActivity() {
 
         buttonRepeat.setOnClickListener {
             viewModel.getTopList()
+        }
+
+        imageSearch.setOnClickListener {
+            Toast.makeText(this, "На данный момент поиск еще не работает :(", Toast.LENGTH_LONG).show()
         }
 
     }
