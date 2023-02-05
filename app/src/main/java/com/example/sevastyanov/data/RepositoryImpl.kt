@@ -17,16 +17,30 @@ object RepositoryImpl : Repository {
     var list: SortedSet<FilmInList> =
         sortedSetOf<FilmInList>({ o1, o2 -> o1.positionInList.compareTo(o2.positionInList)})
 
-    override fun addFilmToFavourites(filmInList: FilmInList) {
+    override fun addFilmToFavourites(filmInList: FilmInList): FilmDetails? {
         dao?.insert(filmInList)
 
         list.remove(filmInList)
         list.add(filmInList.copy(isFavourite = true))
+
+
+        val filmDetails = getFilmDetails(filmInList.filmId)
+
+        if (filmDetails != null) {
+            dao?.insertFavourite(filmDetails)
+            return filmDetails
+        } else {
+            return null
+        }
+
     }
 
     override fun deleteFilmFromFavourites(filmInList: FilmInList) {
         dao?.delete(filmInList)
-
+        val filmDetails = dao?.getFilmDetails(filmInList.filmId)
+        if (filmDetails != null) {
+            dao?.deleteFavourites(filmDetails)
+        }
         list.remove(filmInList)
         list.add(filmInList.copy(isFavourite = false))
     }
@@ -39,17 +53,33 @@ object RepositoryImpl : Repository {
         return favouritesList
     }
 
-    override fun getFilmDetails(filmId: Int): FilmDetails {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL_DETAILS)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val service = retrofit.create(ApiService::class.java)
-        val call = service.getFilmDetails(filmId)
-        return call.execute().body()
+    override fun getFilmDetails(filmId: Int): FilmDetails? {
+        val filmDetails = dao?.getFilmDetails(filmId)
+
+        val favouriteFilm = dao?.getFavouriteFilm(filmId)
+
+        if (filmDetails != null) {
+            return filmDetails
+        } else {
+            val retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL_DETAILS)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val service = retrofit.create(ApiService::class.java)
+            val call = service.getFilmDetails(filmId)
+            return try {
+                val fDetails = call.execute().body()
+                if (favouriteFilm != null) {
+                    dao?.insertFavourite(fDetails)
+                }
+                fDetails
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 
-    override fun getTopList(): List<FilmInList> {
+    override fun getTopList(): List<FilmInList>? {
         if (list.isEmpty()) {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL_LIST)
@@ -57,8 +87,13 @@ object RepositoryImpl : Repository {
                 .build()
             val service = retrofit.create(ApiService::class.java)
             val call = service.getTopList("TOP_100_POPULAR_FILMS")
-            val listResponse = call.execute().body().films.toMutableList()
-            for (i in 0 until listResponse.size) {
+            val listResponse: List<FilmInList>
+            try {
+                listResponse = call.execute().body().films.toMutableList()
+            } catch (e: Exception) {
+                return null
+            }
+            for (i in listResponse.indices) {
                 listResponse[i].positionInList = i
             }
             list = listResponse.toSortedSet { o1, o2 -> o1.positionInList.compareTo(o2.positionInList) }

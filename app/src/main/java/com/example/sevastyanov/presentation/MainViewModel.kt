@@ -15,12 +15,13 @@ class MainViewModel : ViewModel() {
 
     private val getTopListUseCase = GetTopListUseCase(RepositoryImpl)
     private val addFilmToFavouritesUseCase = AddFilmToFavouritesUseCase(RepositoryImpl)
-    private val deleleFilmFromFavouritesUseCase = DeleteFilmFromFavouritesUseCase(RepositoryImpl)
+    private val deleteFilmFromFavouritesUseCase = DeleteFilmFromFavouritesUseCase(RepositoryImpl)
     private val getFavouritesListUseCase = GetFavouritesListUseCase(RepositoryImpl)
     private val getFilmDetailsUseCase = GetFilmDetailsUseCase(RepositoryImpl)
 
-    val topListLD = MutableLiveData<List<FilmInList>>()
-    val filmDetailsLD = MutableLiveData<FilmDetails>()
+    val topListLD = MutableLiveData<List<FilmInList>?>()
+    val filmDetailsLD = MutableLiveData<FilmDetails?>()
+    val isAddedSuccessfully = MutableLiveData<FilmDetails?>()
 
     fun getTopList() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -32,10 +33,12 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO){
 
             if (filmInList.isFavourite) {
-                deleleFilmFromFavouritesUseCase.deleteFilmFromFavourites(filmInList)
+                deleteFilmFromFavouritesUseCase.deleteFilmFromFavourites(filmInList)
                 if (screenMode == SCREEN_MODE_TOP) getTopList() else getFavouritesList()
             } else {
-                addFilmToFavouritesUseCase.addFilmToFavourites(filmInList)
+                isAddedSuccessfully.postValue(
+                    addFilmToFavouritesUseCase.addFilmToFavourites(filmInList)
+                )
                 if (screenMode == SCREEN_MODE_TOP) getTopList() else getFavouritesList()
             }
         }

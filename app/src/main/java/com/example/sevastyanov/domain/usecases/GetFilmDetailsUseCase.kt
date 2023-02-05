@@ -6,7 +6,7 @@ import com.example.sevastyanov.domain.entities.FilmInList
 
 class GetFilmDetailsUseCase(private val repository: Repository) {
 
-    fun getFilmDetails(filmId: Int): FilmDetails {
+    fun getFilmDetails(filmId: Int): FilmDetails? {
         return repository.getFilmDetails(filmId)
     }
 

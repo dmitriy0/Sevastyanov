@@ -25,8 +25,7 @@ class FilmListAdapter() : RecyclerView.Adapter<FilmListAdapter.ViewHolder>() {
             field = value
         }
 
-
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val image: ImageView = view.findViewById(R.id.imageView)
         val tvName: TextView = view.findViewById(R.id.tvName)
         val tvGenre: TextView = view.findViewById(R.id.tvGenre)
@@ -44,8 +43,8 @@ class FilmListAdapter() : RecyclerView.Adapter<FilmListAdapter.ViewHolder>() {
         val item = topList[position]
         with(holder) {
             tvName.text = item.nameRu
-            tvGenre.text = item.genres[0].genre
-            tvYear.text = item.year.toString()
+            tvGenre.text = item.genres[0].genre.replaceFirstChar { it.uppercase() }
+            tvYear.text = "(${item.year})"
             Picasso.get().load(item.posterUrlPreview).into(image)
             isFavourite.visibility = if (item.isFavourite) View.VISIBLE else View.INVISIBLE
             layout.setOnClickListener {
